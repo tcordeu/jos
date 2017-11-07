@@ -111,9 +111,9 @@ boot_alloc(uint32_t n)
 	result = nextfree;
 	char *aux = nextfree;
 
-	for (uint32_t i = 0; i < n; i += PGSIZE){
+	for (int i = 0; i < n; i += PGSIZE){
 		if ((uint32_t)aux > KERNLIMIT)
-			panic("Out of memory!");
+			panic("Error in boot_alloc(): Out of memory!");
 			
 		aux += PGSIZE;
 	}
@@ -142,7 +142,7 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
+	//panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -273,11 +273,22 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-	size_t i;
-	for (i = 0; i < npages; i++) {
-		pages[i].pp_ref = 0;
+
+	// Conventional Memory(640K) sin page 0.
+	for (int i = 1; i < npages_basemem; i++){
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
+	}
+
+	// Extended Memory comenzando desde el ultimo espacio libre
+	// dejado por boot_alloc().
+	uintptr_t *next_free = boot_alloc(0);
+	physaddr_t phys_next_free = PADDR(next_free);
+	int num_next_free = PGNUM(phys_next_free);
+	
+	for (int j = num_next_free; j < npages; j++){
+		pages[j].pp_link = page_free_list;
+		page_free_list = &pages[j];
 	}
 }
 
@@ -296,8 +307,19 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-	// Fill this function in
-	return 0;
+	if (!page_free_list)
+		return NULL;
+
+	// Se saca la primera pagina libre y se actualiza la cabeza de la lista
+	// a la siguiente pagina libre.
+	struct PageInfo* page_allocated = page_free_list;
+	page_free_list = page_free_list -> pp_link;
+	page_allocated -> pp_link = NULL;
+
+	if (alloc_flags & ALLOC_ZERO)
+		memset(page2kva(page_allocated), 0, PGSIZE);
+	
+	return page_allocated;
 }
 
 //
@@ -307,10 +329,16 @@ page_alloc(int alloc_flags)
 void
 page_free(struct PageInfo *pp)
 {
-	// Fill this function in
-	// Hint: You may want to panic if pp->pp_ref is nonzero or
-	// pp->pp_link is not NULL.
+	if (pp -> pp_ref)
+		panic("Error while freeing a page: There are still references to this page.");
+	else if (pp -> pp_link)
+		panic("Error while freeing a page: This page is already free.");
+
+	// Se agrega una nueva pagina libre.
+	pp -> pp_link = page_free_list;
+	page_free_list = pp;
 }
+
 
 //
 // Decrement the reference count on a page,
