@@ -72,6 +72,9 @@ static physaddr_t check_va2pa(pde_t *pgdir, uintptr_t va);
 static void check_page(void);
 static void check_page_installed_pgdir(void);
 
+
+#define KERNLIMIT 0x0ffffffff
+
 // This simple physical memory allocator is used only while JOS is setting
 // up its virtual memory system.  page_alloc() is the real allocator.
 //
@@ -105,8 +108,18 @@ boot_alloc(uint32_t n)
 	// to a multiple of PGSIZE.
 	//
 	// LAB 2: Your code here.
+	result = nextfree;
+	char *aux = nextfree;
 
-	return NULL;
+	for (uint32_t i = 0; i < n; i += PGSIZE){
+		if ((uint32_t)aux > KERNLIMIT)
+			panic("Out of memory!");
+			
+		aux += PGSIZE;
+	}
+
+	nextfree = aux;
+	return result;
 }
 
 
