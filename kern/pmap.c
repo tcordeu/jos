@@ -109,6 +109,7 @@ boot_alloc(uint32_t n)
 	return NULL;
 }
 
+
 // Set up a two-level page table:
 //    kern_pgdir is its linear (virtual) address of the root
 //
@@ -154,7 +155,10 @@ mem_init(void)
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
 
-
+	size_t size_pages = npages * sizeof(struct PageInfo);
+	pages = boot_alloc(size_pages);
+	memset(pages, 0, size_pages);
+		
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
