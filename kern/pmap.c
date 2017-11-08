@@ -376,8 +376,28 @@ page_decref(struct PageInfo *pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Fill this function in
-	return NULL;
+
+	size_t ptx = PTX(va);
+	size_t pdx = PDX(va);
+	pde_t pgdir_entry = pgdir[pdx];
+
+	/*Uso el flag PTE_P para ver si la page table de esta page directory entry esta presente*/
+	if(pgdir_entry & PTE_P){
+		/*Es necesario convertir el pte_addr a un kernel virtual address antes de sumar el indice*/
+		return ((pte_t *) KADDR(PTE_ADDR(pgdir_entry))) + ptx;
+	}
+	/*si llego a esta linea es porque no esta presente la page table*/
+	if(!create) return NULL;
+
+	struct PageInfo* page = page_alloc(ALLOC_ZERO);
+	if(!page) return NULL;
+
+	/*Escribo los bits de permiso (por lo menos present y writeable)*/
+	pgdir[pdx] = page2pa(page) | PTE_P | PTE_W ;
+	(page->pp_ref)++;
+
+	return ((pte_t *) page2kva(page)) + ptx;
+
 }
 
 //
