@@ -379,12 +379,11 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 
 	size_t ptx = PTX(va);
 	size_t pdx = PDX(va);
-	pde_t pgdir_entry = pgdir[pdx];
 
 	/*Uso el flag PTE_P para ver si la page table de esta page directory entry esta presente*/
-	if(pgdir_entry & PTE_P){
+	if(pgdir[pdx] & PTE_P){
 		/*Es necesario convertir el pte_addr a un kernel virtual address antes de sumar el indice*/
-		return ((pte_t *) KADDR(PTE_ADDR(pgdir_entry))) + ptx;
+		return ((pte_t *) KADDR(PTE_ADDR(pgdir[pdx]))) + ptx;
 	}
 	/*si llego a esta linea es porque no esta presente la page table*/
 	if(!create) return NULL;
@@ -449,7 +448,9 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 	if(!pte) return -E_NO_MEM;
 	/*incremento pp_ref antes de la insercion teniendo en cuenta el caso borde*/
 	(pp->pp_ref)++;
+	/*hay una pagina mapeada en la posicion*/
 	if(*pte & PTE_P) page_remove(pgdir,va);
+	/*escribo los permisos*/
 	*pte = page2pa(pp) | perm | PTE_P;
 	return 0;
 }
