@@ -275,7 +275,7 @@ region_alloc(struct Env *e, void *va, size_t len)
 	while (inicio < fin) {
 		struct PageInfo *page = page_alloc(0);
 		if (!page) panic("fallo region_alloc");
-		page_insert(e->env_pgdir, page, begin, PTE_P | PTE_W | PTE_U);
+		page_insert(e->env_pgdir, page, inicio, PTE_P | PTE_W | PTE_U);
 		inicio += PGSIZE;
 	}
 }
@@ -375,7 +375,11 @@ load_icode(struct Env *e, uint8_t *binary)
 void
 env_create(uint8_t *binary, enum EnvType type)
 {
-	// LAB 3: Your code here.
+	struct Env *e;
+    int error = env_alloc(&e, 0);
+    if(error < 0) panic("env_create: %e", error);
+    load_icode(e, binary);
+	e->env_type = type;
 }
 
 //
@@ -493,5 +497,12 @@ env_run(struct Env *e)
 
 	// LAB 3: Your code here.
 
-	panic("env_run not yet implemented");
+	/*es cambio de contexto*/
+    if ((curenv) && (curenv->env_status == ENV_RUNNING)) curenv->env_status = ENV_RUNNABLE;
+
+	curenv = e;
+	e->env_status = ENV_RUNNING;
+	e->env_runs++;
+	lcr3(PADDR(e->env_pgdir));
+	env_pop_tf(&e->env_tf);
 }
