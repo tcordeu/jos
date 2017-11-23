@@ -267,13 +267,17 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 static void
 region_alloc(struct Env *e, void *va, size_t len)
 {
-	// LAB 3: Your code here.
-	// (But only if you need it for load_icode.)
-	//
-	// Hint: It is easier to use region_alloc if the caller can pass
-	//   'va' and 'len' values that are not page-aligned.
-	//   You should round va down, and round (va + len) up.
-	//   (Watch out for corner-cases!)
+
+	/*Teniendo en cuenta el alineamiento, uso ROUNDUP y ROUNDOWN*/
+	void *inicio = ROUNDDOWN(va, PGSIZE);
+	void *fin = ROUNDUP(va+len, PGSIZE);
+
+	while (inicio < fin) {
+		struct PageInfo *page = page_alloc(0);
+		if (!page) panic("fallo region_alloc");
+		page_insert(e->env_pgdir, page, begin, PTE_P | PTE_W | PTE_U);
+		inicio += PGSIZE;
+	}
 }
 
 //
@@ -330,11 +334,35 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  What?  (See env_run() and env_pop_tf() below.)
 
 	// LAB 3: Your code here.
+	struct Elf* ELFHDR = (struct Elf*) binary;
 
-	// Now map one page for the program's initial stack
-	// at virtual address USTACKTOP - PGSIZE.
+	/*es un ELF valido?*/
+	if (ELFHDR->e_magic != ELF_MAGIC) panic("load_icode: el programa no es un ELF valido");
 
-	// LAB 3: Your code here.
+	/*primer program header*/
+	struct Proghdr *ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
+	/*ultimo ph*/
+	struct Proghdr *eph = ph + ELFHDR->e_phnum;
+
+	/*cargo el page directory del proceso*/
+	lcr3(PADDR(e->env_pgdir));
+
+	for (; ph < eph; ph++)
+		if (ph->p_type == ELF_PROG_LOAD) {
+			if(!(ph->p_filesz <= ph->p_memsz)) panic("load_icode: el tamaño de un segmento en la imagen del archivo es mayor que en memoria");
+			/*aloco la region virtual que corresponde al segmento*/
+			region_alloc(e, (void *)ph->p_va, ph->p_memsz);
+			/*seteo la region virtual a cero, region_alloc no lo hace*/
+			memset((void *)ph->p_va, 0, ph->p_memsz);
+			/*copio los bytes de p_filesz desde "binary+ph->p_offset" a "ph->p_va"*/
+			memcpy((void *)ph->p_va, binary+ph->p_offset, ph->p_filesz);
+		}
+	
+	/*seteo el entry point del programa en el trapframe del proceso*/
+	e->env_tf.tf_eip = ELFHDR->e_entry;
+
+	/*mapeo una pagina para el stack del programa*/
+	region_alloc(e, (void *) (USTACKTOP - PGSIZE), PGSIZE);
 }
 
 //
