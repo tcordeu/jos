@@ -184,8 +184,7 @@ env_setup_vm(struct Env *e)
 
 	p->pp_ref++;
 	e->env_pgdir = (pde_t *) page2kva(p);
-	size_t size_to_cpy = (NPDENTRIES - PDX(UTOP)) * sizeof(pde_t);
-	memcpy(kern_pgdir + PDX(UTOP), e->env_pgdir, size_to_cpy);
+	memcpy(e->env_pgdir, kern_pgdir, PGSIZE);
 
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
