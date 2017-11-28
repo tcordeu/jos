@@ -190,3 +190,17 @@ The target architecture is assumed to be i8086
    CS =f000 000f0000 0000ffff 00009b00
 
 Al haberse ejecutado la instruccion "int 0x30" se provoca una interrupcion, por lo tanto, la CPU invoca el procedimiento ubicado en IDT[48] para manejarla(con nivel de privilegio 0, ya que quien la maneja es el kernel).
+
+
+kern_idt
+--------
+
+1. En la seccion 6.1 del manual de Intel x86 hay una tabla que indica si la interrupcion o excepcion produce un error code.
+   La instruccion "iret" desapila dando por hecho que hay un error code en el stack, por lo tanto, si este no esta se desapilarian valores
+   no deseados.
+
+2. Si el parametro istrap es 1 entonces la gate sera del tipo Trap/Exception, en caso de ser 0 sera del tipo Interrupt.
+   En el caso de que la gate sea del tipo Interrupt, la interrupcion no podra ser interrumpida por otras interrupciones. Mientras que si es
+   del tipo Trap, puede ser interrupida por otras interrupciones.
+
+3. Se genera una excepcion del tipo Page Fault.
