@@ -74,11 +74,11 @@ TRAPHANDLER_NOEC(_syscall_idt, T_SYSCALL)		// system call
 .globl _alltraps
 _alltraps:
 	push %ds
-    push %es
-    pusha
-    mov $GD_KT, %ax
-    mov %ax, %ds
-    mov %ax, %es
+	push %es
+	pusha
+	mov $GD_KT, %ax
+	mov %ax, %ds
+	mov %ax, %es
 	pushl %esp
 	call trap
 	
