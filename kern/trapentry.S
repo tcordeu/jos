@@ -47,25 +47,25 @@
  * Lab 3: Your code here for generating entry points for the different traps.
  */
 
-TRAPHANDLER_NOEC(_divide_idt, T_DIVIDE)		// divide error
-TRAPHANDLER_NOEC(_debug_idt, T_DEBUG)		// debug exception
-TRAPHANDLER_NOEC(_nmi_idt, T_NMI)		// non-maskable interrupt
-TRAPHANDLER_NOEC(_breakpoint_idt, T_BRKPT)		// breakpoint
-TRAPHANDLER_NOEC(_overflow_idt, T_OFLOW)		// overflow
-TRAPHANDLER_NOEC(_bound_idt, T_BOUND)		// bounds check
-TRAPHANDLER_NOEC(_illop_idt, T_ILLOP)		// illegal opcode
-TRAPHANDLER_NOEC(_device_idt, T_DEVICE)		// device not available
-TRAPHANDLER(_dblflt_idt, T_DBLFLT)		// double fault
-TRAPHANDLER(_tss_idt, T_TSS)		// invalid task switch segment
-TRAPHANDLER(_segnp_idt, T_SEGNP)		// segment not present
-TRAPHANDLER(_stack_idt, T_STACK)		// stack exception
-TRAPHANDLER(_gpflt_idt, T_GPFLT)		// general protection fault
-TRAPHANDLER(_pgflt_idt, T_PGFLT)		// page fault
-TRAPHANDLER_NOEC(_fperr_idt, T_FPERR)		// floating point error
-TRAPHANDLER(_align_idt, T_ALIGN)		// aligment check
-TRAPHANDLER_NOEC(_mchk_idt, T_MCHK)		// machine check
-TRAPHANDLER_NOEC(_simd_idt, T_SIMDERR)		// SIMD floating point error
-TRAPHANDLER_NOEC(_syscall_idt, T_SYSCALL)		// system call
+TRAPHANDLER_NOEC(_divide_idt, 0)		// divide error
+TRAPHANDLER_NOEC(_debug_idt, 1)		// debug exception
+TRAPHANDLER_NOEC(_nmi_idt, 2)		// non-maskable interrupt
+TRAPHANDLER_NOEC(_breakpoint_idt, 3)		// breakpoint
+TRAPHANDLER_NOEC(_overflow_idt, 4)		// overflow
+TRAPHANDLER_NOEC(_bound_idt, 5)		// bounds check
+TRAPHANDLER_NOEC(_illop_idt, 6)		// illegal opcode
+TRAPHANDLER_NOEC(_device_idt, 7)		// device not available
+TRAPHANDLER(_dblflt_idt, 8)		// double fault
+TRAPHANDLER(_tss_idt, 10)		// invalid task switch segment
+TRAPHANDLER(_segnp_idt, 11)		// segment not present
+TRAPHANDLER(_stack_idt, 12)		// stack exception
+TRAPHANDLER(_gpflt_idt, 13)		// general protection fault
+TRAPHANDLER(_pgflt_idt, 14)		// page fault
+TRAPHANDLER_NOEC(_fperr_idt, 16)		// floating point error
+TRAPHANDLER(_align_idt, 17)		// aligment check
+TRAPHANDLER_NOEC(_mchk_idt, 18)		// machine check
+TRAPHANDLER_NOEC(_simd_idt, 19)		// SIMD floating point error
+TRAPHANDLER_NOEC(_syscall_idt, 48)		// system call
 
 /*
  * Lab 3: Your code here for _alltraps
