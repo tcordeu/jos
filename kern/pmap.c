@@ -567,7 +567,29 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+        uintptr_t dir_inicial = (uintptr_t)va;
+	uintptr_t dir_final = (uintptr_t)(va + len);
 
+	for (uintptr_t dir_actual = dir_inicial; dir_actual < dir_final; dir_actual += PGSIZE){
+		
+		pte_t *pte = pgdir_walk(env->env_pgdir, (void*)dir_actual, 0);
+		
+		if (!pte || !(*pte & PTE_P) || ((*pte & perm) != perm) || (dir_actual >= ULIM)){
+			// Caso en el cual: No hay pte, no esta la pagina pedida,
+			// el usuario no tiene permisos o la direccion esta por encima de ULIM.
+
+			// Se setea user_mem_check_addr a la direccion de la pagina virtual donde esta
+			// contenida la direccion que provoca la falla.
+			// En caso de que esta sea menor que dir_inicial, se setea user_mem_... a dir_inicial.
+			user_mem_check_addr = ROUNDDOWN(dir_actual, PGSIZE);
+
+			if (user_mem_check_addr < dir_inicial)
+				user_mem_check_addr = dir_inicial;
+				
+			return -E_FAULT;
+		}
+	}
+	
 	return 0;
 }
 
