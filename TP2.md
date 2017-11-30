@@ -204,3 +204,12 @@ kern_idt
    del tipo Trap, puede ser interrupida por otras interrupciones.
 
 3. Se genera una excepcion del tipo Page Fault.
+
+
+user_evilhello
+--------------
+
+1. En que la direccion pasada a sys_cputs() apunta al stack del usuario, es decir, apunta a direcciones que pertenecen al usuario.
+
+2. Cuando se ejecuta la nueva version de evilhello se produce una Page Fault cuando se intenta ejecutar "char first = *entry".
+   Esto se debe a que "entry" es una direccion alta perteneciente a una pagina donde el usuario no tiene permisos, por lo tanto, se produce una Page Fault y se destruye el proceso.
